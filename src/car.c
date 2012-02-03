@@ -2,46 +2,18 @@
 
 #include <libheis/elev.h>
 
-#include "motor.h"
+#include "car.h"
 
 void (*const state_table [MAX_STATES][MAX_EVENTS]) (void) = {
-      { action_dummy, action_dummy, action_up_stop_normal, action_up_stop_emergency },                                 /* events for state UP */
-      { action_dummy, action_dummy, action_down_stop_normal, action_down_stop_emergency },                             /* events for state DOWN */
-      { action_normal_stop_start_up, action_normal_stop_start_down, action_dummy, action_normal_stop_stop_emergency }, /* events for state STOP_NORMAL */
-      { action_dummy, action_dummy, action_emergency_stop_stop_normal, action_dummy }                                  /* events for state STOP_EMERGENCY */
+
+      /* NOEVENT      START_UP     START_DOWN        STOP_NORMAL            STOP_EMERGENCY */
+    { action_dummy, action_dummy, action_dummy, action_up_stop_normal, action_up_stop_emergency },                                 /* events for state UP */
+    { action_dummy, action_dummy, action_dummy, action_down_stop_normal, action_down_stop_emergency },                             /* events for state DOWN */
+    { action_dummy, action_normal_stop_start_up, action_normal_stop_start_down, action_dummy, action_normal_stop_stop_emergency }, /* events for state STOP_NORMAL */
+    { action_dummy, action_dummy, action_dummy, action_emergency_stop_stop_normal, action_dummy }                                  /* events for state STOP_EMERGENCY */
 };
 
-enum events get_new_event (void)
-{
-  /* Bottom. Go up */
-  if (elev_get_floor_sensor_signal () != -1) {
-    return NORMAL_STOP;
-  }
-}
-
-void motor_init (void) {
-    // Initialize hardware
-    if (!elev_init()) {
-        printf(__FILE__ ": Unable to initialize elevator hardware\n");
-        return 1;
-    }
-
-    if (elev_get_floor_sensor_signal() == -1) {
-	elev_set_speed(-300);
-	while (elev_get_floor_sensor_signal() == -1);
-    }
-
-    elev_set_speed(0);
-    current_state = NORMAL_STOP;
-}
-    
-
-/* Update the state machine */
-void motor_update (void) {
-    new_event = get_new_event ();
-    if (((new_event >= 0) && (new_event <= MAX_EVENTS)) && ((current_state >= 0) && (current_state <= MAX_STATES))) 
-        state_table [current_state][new_event] ();
-}
+int last_floor;
 
 /* Dummy action. Does nothing */
 void action_dummy (void) {
@@ -51,6 +23,7 @@ void action_dummy (void) {
 void action_up_stop_normal (void) {
     printf("Moving up: Performing normal stop\n");
     elev_set_speed (0);
+    elev_set_button_lamp(BUTTON_COMMAND, elev_get_floor_sensor_signal(), 0);
 
     current_state = NORMAL_STOP;
 }
@@ -67,6 +40,7 @@ void action_up_stop_emergency (void) {
 void action_down_stop_normal (void) {
     printf("Moving down: Performing normal stop\n");
     elev_set_speed (0);
+    elev_set_button_lamp(BUTTON_COMMAND, elev_get_floor_sensor_signal(), 0);
 
     current_state = NORMAL_STOP;
 }
@@ -107,4 +81,28 @@ void action_emergency_stop_stop_normal (void) {
     elev_set_speed (0);
 
     current_state = NORMAL_STOP;
+}
+
+enum events get_new_event (void)
+{
+  int floor = elev_get_floor_sensor_signal();
+
+  last_floor = floor;
+}
+
+void motor_init (void) {
+    if (elev_get_floor_sensor_signal() == -1) {
+      elev_set_speed(-300);
+      while (elev_get_floor_sensor_signal() == -1);
+    }
+
+    elev_set_speed(0);
+    current_state = NORMAL_STOP;
+}
+    
+/* Update the state machine */
+void motor_update (void) {
+    new_event = get_new_event ();
+    if (((new_event >= 0) && (new_event <= MAX_EVENTS)) && ((current_state >= 0) && (current_state <= MAX_STATES))) 
+        state_table [current_state][new_event] ();
 }

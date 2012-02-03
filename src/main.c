@@ -4,20 +4,34 @@
 #include "config.h"
 
 #include <stdio.h>
+#include <pthread.h>
 
 #include <libheis/elev.h>
 
+#include "car.h"
+#include "ui.h"
 
 int main()
 {
-    printf("Initializing motor. Please wait.\n");
-    motor_init();
-    printf("Motor initialized. Ready.\n");
+  int new_order = 0;
 
-    while (1) {
-        motor_update ();
-    }
+  // Initialize hardware
+  if (!elev_init()) {
+      printf(__FILE__ ": Unable to initialize elevator hardware\n");
+      return 1;
+  }
 
-    return 0;
+  printf("Initializing motor. Please wait.\n");
+  motor_init();
+  printf("Motor initialized. Ready.\n");
+
+  while(1) {
+      // check IO
+      if(ui_check_buttons()) {
+        // TODO: check order queue
+      }
+  }
+
+  return 0;
 }
 

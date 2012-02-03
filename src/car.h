@@ -2,7 +2,7 @@
 #define __INCLUDE_MOTOR_H__
 
 enum states {UP, DOWN, NORMAL_STOP, EMERGENCY_STOP, MAX_STATES} current_state;
-enum events {START_UP, START_DOWN, STOP_NORMAL, STOP_EMERGENCY, MAX_EVENTS} new_event;
+enum events {NOEVENT, START_UP, START_DOWN, STOP_NORMAL, STOP_EMERGENCY, MAX_EVENTS} new_event;
 
 void motor_init (void);
 void motor_update (void);
