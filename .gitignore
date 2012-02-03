@@ -2,6 +2,7 @@
 *.l[oa]
 *.sw[po]
 .deps
+.libs
 Makefile
 Makefile.in
 

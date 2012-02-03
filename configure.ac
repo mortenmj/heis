@@ -5,7 +5,6 @@ AC_CONFIG_SRCDIR([src])
 AC_CONFIG_MACRO_DIR([m4])
 
 AM_INIT_AUTOMAKE([foreign -Wall -Werror])
-AM_PATH_CHECK
 
 # Check for programs
 AC_PROG_CC
