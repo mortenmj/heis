@@ -90,7 +90,7 @@ void action_up_stop_normal (void) {
     last_floor = floor;
   }
 
-  void motor_init (void) {
+  void car_init (void) {
       if (elev_get_floor_sensor_signal() == -1) {
         elev_set_speed (SPEED_DOWN);
         while (elev_get_floor_sensor_signal() == -1);
@@ -101,7 +101,7 @@ void action_up_stop_normal (void) {
 }
     
 /* Update the state machine */
-void motor_update (void) {
+void car_update (void) {
     new_event = get_new_event ();
     if (((new_event >= 0) && (new_event <= MAX_EVENTS)) && ((current_state >= 0) && (current_state <= MAX_STATES))) 
         state_table [current_state][new_event] ();

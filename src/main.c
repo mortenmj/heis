@@ -21,9 +21,10 @@ int main()
       return 1;
   }
 
-  printf("Initializing motor. Please wait.\n");
-  motor_init();
-  printf("Motor initialized. Ready.\n");
+  printf("%i\n", elev_get_floor_sensor_signal());
+  printf("Initializing elevator car. Please wait.\n");
+  car_init();
+  printf("Initialized. Ready.\n");
 
   while(1) {
       // check IO

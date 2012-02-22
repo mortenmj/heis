@@ -8,8 +8,8 @@
 enum states {UP, DOWN, NORMAL_STOP, EMERGENCY_STOP, MAX_STATES} current_state;
 enum events {NOEVENT, START_UP, START_DOWN, STOP_NORMAL, STOP_EMERGENCY, MAX_EVENTS} new_event;
 
-void motor_init (void);
-void motor_update (void);
+void car_init (void);
+void car_update (void);
 
 void action_down_stop_normal (void);
 void action_down_stop_emergency (void);
