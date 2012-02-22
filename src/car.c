@@ -22,81 +22,81 @@ void action_dummy (void) {
 /* From the UP state, perform a normal stop */
 void action_up_stop_normal (void) {
     printf("Moving up: Performing normal stop\n");
-    elev_set_speed (0);
-    elev_set_button_lamp(BUTTON_COMMAND, elev_get_floor_sensor_signal(), 0);
+      elev_set_speed (SPEED_HALT);
+      elev_set_button_lamp(BUTTON_COMMAND, elev_get_floor_sensor_signal(), 0);
 
-    current_state = NORMAL_STOP;
-}
+      current_state = NORMAL_STOP;
+  }
 
-/* From the UP state, perform an emergency stop */
-void action_up_stop_emergency (void) {
-    printf("Moving up: Performing emergency stop\n");
-    elev_set_speed (0);
+  /* From the UP state, perform an emergency stop */
+  void action_up_stop_emergency (void) {
+      printf("Moving up: Performing emergency stop\n");
+      elev_set_speed (SPEED_HALT);
 
-    current_state = EMERGENCY_STOP;
-}
+      current_state = EMERGENCY_STOP;
+  }
 
-/* From the DOWN state, perform a normal stop */
-void action_down_stop_normal (void) {
-    printf("Moving down: Performing normal stop\n");
-    elev_set_speed (0);
-    elev_set_button_lamp(BUTTON_COMMAND, elev_get_floor_sensor_signal(), 0);
+  /* From the DOWN state, perform a normal stop */
+  void action_down_stop_normal (void) {
+      printf("Moving down: Performing normal stop\n");
+      elev_set_speed (SPEED_HALT);
+      elev_set_button_lamp(BUTTON_COMMAND, elev_get_floor_sensor_signal(), 0);
 
-    current_state = NORMAL_STOP;
-}
+      current_state = NORMAL_STOP;
+  }
 
-/* From the DOWN state, perform an emergency stop */
-void action_down_stop_emergency (void) {
-    printf("Moving down: Performing emergency stop\n");
-    elev_set_speed (0);
+  /* From the DOWN state, perform an emergency stop */
+  void action_down_stop_emergency (void) {
+      printf("Moving down: Performing emergency stop\n");
+      elev_set_speed (SPEED_HALT);
 
-    current_state = EMERGENCY_STOP;
-}
+      current_state = EMERGENCY_STOP;
+  }
 
-/* From the NORMAL_STOP state, start moving up */
-void action_normal_stop_start_up(void) {
-    printf("In normal stop: Moving up\n");
-    elev_set_speed (300);
+  /* From the NORMAL_STOP state, start moving up */
+  void action_normal_stop_start_up(void) {
+      printf("In normal stop: Moving up\n");
+      elev_set_speed (SPEED_UP);
 
-    current_state = UP;
-}
+      current_state = UP;
+  }
 
-/* From the NORMAL_STOP state, start moving down */
-void action_normal_stop_start_down (void) {
-    printf("In normal stop: Moving down\n");
-    elev_set_speed (-300);
+  /* From the NORMAL_STOP state, start moving down */
+  void action_normal_stop_start_down (void) {
+      printf("In normal stop: Moving down\n");
+      elev_set_speed (SPEED_DOWN);
 
-    current_state = DOWN;
-}
+      current_state = DOWN;
+  }
 
-/* From the NORMAL_STOP state, go to the EMERGENCY_STOP state */
-void action_normal_stop_stop_emergency (void) {
-    printf("In normal stop: Performing emergency stop\n");
-    current_state = EMERGENCY_STOP;
-}
+  /* From the NORMAL_STOP state, go to the EMERGENCY_STOP state */
+  void action_normal_stop_stop_emergency (void) {
+      printf("In normal stop: Performing emergency stop\n");
+      current_state = EMERGENCY_STOP;
+  }
 
-/* From the EMERGENCY_STOP state, go to the NORMAL_STOP state */
-void action_emergency_stop_stop_normal (void) {
-    printf("In emergency stop: Performing normal stop\n");
-    elev_set_speed (0);
+  /* From the EMERGENCY_STOP state, go to the NORMAL_STOP state */
+  void action_emergency_stop_stop_normal (void) {
+      printf("In emergency stop: Performing normal stop\n");
+      elev_set_speed (SPEED_HALT);
 
-    current_state = NORMAL_STOP;
-}
+      current_state = NORMAL_STOP;
+  }
 
-enum events get_new_event (void)
-{
-  int floor = elev_get_floor_sensor_signal();
+  enum events get_new_event (void)
+  {
+    int floor = elev_get_floor_sensor_signal();
 
-  last_floor = floor;
-}
+    last_floor = floor;
+  }
 
-void motor_init (void) {
-    if (elev_get_floor_sensor_signal() == -1) {
-      elev_set_speed(-300);
-      while (elev_get_floor_sensor_signal() == -1);
-    }
+  void motor_init (void) {
+      if (elev_get_floor_sensor_signal() == -1) {
+        elev_set_speed (SPEED_DOWN);
+        while (elev_get_floor_sensor_signal() == -1);
+      }
 
-    elev_set_speed(0);
+      elev_set_speed (SPEED_HALT);
     current_state = NORMAL_STOP;
 }
     

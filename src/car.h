@@ -1,6 +1,10 @@
 #ifndef __INCLUDE_MOTOR_H__
 #define __INCLUDE_MOTOR_H__
 
+#define SPEED_UP 300
+#define SPEED_DOWN -300
+#define SPEED_HALT 0
+
 enum states {UP, DOWN, NORMAL_STOP, EMERGENCY_STOP, MAX_STATES} current_state;
 enum events {NOEVENT, START_UP, START_DOWN, STOP_NORMAL, STOP_EMERGENCY, MAX_EVENTS} new_event;
 
