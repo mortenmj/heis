@@ -8,4 +8,4 @@ libheis_la_SOURCES = \
 	elev.h \
 	$(NULL)
 
-libheis_la_LIBADD = -lm -lpthread -lcomedi
+libheis_la_LIBADD = -lm -lcomedi

@@ -14,10 +14,6 @@
 #include <assert.h>
 #include <stdlib.h>
 
-// Number of signals and lamps on a per-floor basis (excl sensor)
-#define N_BUTTONS 3
-
-
 // Matrix of lamp channels indexed by floor and button type. Excuse ugly macro.
 #define LCM_SET(f) {LIGHT##f##_UP, LIGHT##f##_DOWN, LIGHT##f##_COMMAND}
 static const int lamp_channel_matrix[N_FLOORS][N_BUTTONS] =
