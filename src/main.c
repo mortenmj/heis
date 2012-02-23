@@ -1,10 +1,8 @@
-// REPLACE THIS FILE WITH YOUR OWN CODE.
-// READ ELEV.H FOR INFORMATION ON HOW TO USE THE ELEVATOR FUNCTIONS.
-
 #include "config.h"
 
 #include <stdio.h>
-#include <pthread.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 #include <libheis/elev.h>
 
@@ -21,16 +19,20 @@ int main()
       return 1;
   }
 
-  printf("%i\n", elev_get_floor_sensor_signal());
-  printf("Initializing elevator car. Please wait.\n");
+  printf ("Initializing elevator car. Please wait.\n");
   car_init();
-  printf("Initialized. Ready.\n");
+  printf ("Initialized. Ready.\n");
 
   while(1) {
-      // check IO
-      if(ui_check_buttons()) {
-        // TODO: check order queue
-      }
+    // check IO
+    if (ui_check_buttons() || elev_get_floor_sensor_signal() != -1) {
+      /* New order received; update state machine */
+      car_update_state();
+
+      usleep(50000);
+      //system("clear");
+      //ui_print_orders();
+    }
   }
 
   return 0;
