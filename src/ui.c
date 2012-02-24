@@ -49,21 +49,27 @@ int ui_check_order(order_type_t type, int floor) {
 int ui_get_nearest_order(order_type_t type, int floor) {
     switch (type) {
       case ORDER_UP:
-        for (int i = floor; i < N_FLOORS-1; i++) {
-            if (ui_check_order(ORDER_UP, i))
+        for (int i = floor+1; i < N_FLOORS-1; i++) {
+            if (ui_check_order(ORDER_UP, i)) {
+                printf("ORDER_UP found at floor %i\n", i);
                 return i;
+            }
         }
         break;
       case ORDER_DOWN:
-        for (int i = floor; i > 0; i--) {
-            if (ui_check_order(ORDER_DOWN, i))
+        for (int i = floor-1; i > 0; i--) {
+            if (ui_check_order(ORDER_DOWN, i)) {
+                printf("ORDER_DOWN found at floor %i\n", i);
                 return i;
+            }
         }
         break;
       case ORDER_CAR:
         for (int i = floor; i < N_FLOORS; i++) {
-            if (ui_check_order(ORDER_CAR, i))
+            if (ui_check_order(ORDER_CAR, i)) {
+                printf("ORDER_CAR found at floor %i\n", i);
                 return i;
+            }
         }
         break;
     }

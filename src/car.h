@@ -27,23 +27,6 @@ typedef enum states {
 void car_init (void);
 void car_update_state (void);
 
-void action_moving_up_halt (void);
-void action_moving_up_stop (void);
-
-void action_moving_down_halt (void);
-void action_moving_down_stop (void);
-
-void action_idle_start_up (void);
-void action_idle_start_down (void);
-void action_idle_halt (void);
-void action_idle_stop (void);
-
-void action_stopped_start_up (void);
-void action_stopped_start_down (void);
-void action_stopped_halt (void);
-
-void action_dummy (void);
-
 enum events get_new_event (void);
 
 state_t car_get_current_state (void);
