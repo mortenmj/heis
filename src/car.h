@@ -4,7 +4,7 @@
 #define SPEED_UP 150
 #define SPEED_DOWN -150
 #define SPEED_HALT 0
-#define HALT_PAUSE 7500
+#define HALT_PAUSE 0
 #define STOP_PAUSE 0
 
 typedef enum events {
@@ -35,6 +35,7 @@ void action_moving_down_stop (void);
 
 void action_idle_start_up (void);
 void action_idle_start_down (void);
+void action_idle_halt (void);
 void action_idle_stop (void);
 
 void action_stopped_start_up (void);

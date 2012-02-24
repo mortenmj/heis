@@ -11,7 +11,7 @@ extern int stop;
 void (*const state_table [N_STATES][N_EVENTS]) (void) = {
 
       /* NOEVENT      START_UP     START_DOWN           HALT                   STOP */
-    { action_dummy, action_idle_start_up, action_idle_start_down, action_dummy, action_idle_stop },                    /* events for state IDLE */
+    { action_dummy, action_idle_start_up, action_idle_start_down, action_idle_halt, action_idle_stop },                /* events for state IDLE */
     { action_dummy, action_dummy, action_dummy, action_moving_up_halt, action_moving_up_stop },                        /* events for state MOVING_UP */
     { action_dummy, action_dummy, action_dummy, action_moving_down_halt, action_moving_down_stop },                    /* events for state MOVING_DOWN */
     { action_dummy, action_stopped_start_up, action_stopped_start_down, action_stopped_halt, action_dummy }            /* events for state STOPPED */
@@ -22,24 +22,51 @@ state_t current_state, last_state;
 event_t new_event;
 
 static void smooth_stop () {
-    if (current_state == MOVING_UP) {
-      elev_set_speed (SPEED_DOWN);
-      usleep(HALT_PAUSE);
-      elev_set_speed (SPEED_HALT);
-    } else if (current_state == MOVING_DOWN) {
-      elev_set_speed (SPEED_UP);
-      usleep(HALT_PAUSE);
-      elev_set_speed (SPEED_HALT);
+    printf("Smooth stop!\n");
+
+    switch(current_state) {
+      case MOVING_UP:
+        //elev_set_speed (SPEED_DOWN);
+        //usleep(HALT_PAUSE);
+        elev_set_speed (SPEED_HALT);
+        break;
+      case MOVING_DOWN:
+        //elev_set_speed (SPEED_UP);
+        //usleep(HALT_PAUSE);
+        elev_set_speed (SPEED_HALT);
+        break;
     }
 }
 
-/* Dummy action. Does nothing */
+static direction_t get_current_direction () {
+    switch (current_state) {
+      case MOVING_UP:
+        return UP;
+      case MOVING_DOWN:
+        return DOWN;
+      default:
+        return NONE;
+    }
+}
+
+/* Dummy action. No state transition. */
 void action_dummy (void) {
+    int floor = elev_get_floor_sensor_signal();
+
+    if (floor < 0)
+        return;
+
+    elev_set_floor_indicator(floor);
 }
 
 /* From MOVING_UP, go to IDLE */
 void action_moving_up_halt (void) {
     int floor = elev_get_floor_sensor_signal();
+
+    if (floor < 0)
+        return;
+
+    elev_set_floor_indicator(floor);
 
     printf("Moving up: Halting\n");
 
@@ -54,6 +81,13 @@ void action_moving_up_halt (void) {
 
 /* From MOVING_UP, go to STOPPED */
 void action_moving_up_stop (void) {
+    int floor = elev_get_floor_sensor_signal();
+
+    if (floor < 0)
+        return;
+
+    elev_set_floor_indicator(floor);
+
     printf("Moving up: Stopping\n");
     elev_set_speed (SPEED_HALT);
 
@@ -63,6 +97,11 @@ void action_moving_up_stop (void) {
 /* From MOVING_DOWN, go to IDLE */
 void action_moving_down_halt (void) {
     int floor = elev_get_floor_sensor_signal();
+
+    if (floor < 0)
+        return;
+
+    elev_set_floor_indicator(floor);
 
     printf("Moving down: Halting\n");
 
@@ -77,6 +116,13 @@ void action_moving_down_halt (void) {
 
 /* From DOWN, go to STOPPED*/
 void action_moving_down_stop (void) {
+    int floor = elev_get_floor_sensor_signal();
+
+    if (floor < 0)
+        return;
+
+    elev_set_floor_indicator(floor);
+
     printf("Moving down: Stopping\n");
     elev_set_speed (SPEED_HALT);
 
@@ -93,10 +139,24 @@ void action_idle_start_up(void) {
 
 /* From IDLE, go to MOVING_DOWN */
 void action_idle_start_down (void) {
-    printf("In normal stop: Moving down\n");
+    printf("In idle: Moving down\n");
     elev_set_speed (SPEED_DOWN);
 
     current_state = MOVING_DOWN;
+}
+
+/* From IDLE, return to IDLE */
+void action_idle_halt (void) {
+    int floor = elev_get_floor_sensor_signal();
+
+    if (floor < 0)
+        return;
+
+    printf("In idle, halting\n");
+
+    ui_remove_order(ORDER_CAR, floor);
+
+    current_state = HALT;
 }
 
 /* From IDLE, go to STOPPED */
@@ -108,7 +168,7 @@ void action_idle_stop (void) {
 /* From STOPPED, go to IDLE */
 void action_stopped_halt (void) {
     printf("In stopped: Halting\n");
-    elev_set_speed (SPEED_HALT);
+    smooth_stop();
 
     current_state = IDLE;
 }
@@ -133,7 +193,7 @@ void action_stopped_start_down(void) {
     current_state = MOVING_DOWN;
 }
 
-enum events get_new_event (void)
+event_t get_new_event (void)
 {
   int floor = elev_get_floor_sensor_signal();
   int next_floor;
@@ -145,17 +205,28 @@ enum events get_new_event (void)
       return STOP;
   }
 
+  /* TODO: Always halt at the top and bottom floors */
+
   /* See if the elevator has been ordered to the current floor*/
   if (floor != -1) {
-      if (ui_check_order(ORDER_CAR, floor) ||
-         (current_state == MOVING_UP && ui_check_order(ORDER_UP, floor)) ||
-         (current_state == MOVING_DOWN && ui_check_order(MOVING_DOWN, floor))) {
+      if (ui_check_order(ORDER_CAR, floor)) {
+          printf("Someone inside the elevator wants out. Halting\n");
           return HALT;
       }
+
+      /* If someone wants on in the direction we're going, and there are no orders further up/down, we let them on */
+      if (ui_check_order((order_type_t)get_current_direction(), floor) && ui_get_nearest_order((order_type_t)get_current_direction(), floor) == -1) {
+          printf("No orders further in current direction (%i). Halting\n", get_current_direction());
+          return HALT;
+      } else {
+          printf("There are people waiting at a later floor in the current direction (%i), expediting those first\n", get_current_direction());
+      }
+
+      /* TODO: Alternately, if there are no other orders in the current direction, we'll pick up someone going the other way */
   }
 
-  /* See if anyone in the car wants to go somewhere */
-  next_floor = ui_get_nearest_order(UP, 0);
+  /* See if anyone has selected a floor */
+  next_floor = ui_get_nearest_order(ORDER_CAR, 0);
 
   if (next_floor != -1) {
     if (next_floor > floor) {
@@ -166,14 +237,33 @@ enum events get_new_event (void)
   }
 
   /* See if anyone has ordered the car */
+  next_floor = ui_get_nearest_order(ORDER_UP, 0);
+  if (next_floor != -1) {
+      if (next_floor > floor) {
+          return START_UP;
+      } else {
+          return START_DOWN;
+      }
+  }
 
-  /* Nothing to do, halt the car */
-  return HALT;
+  next_floor = ui_get_nearest_order(ORDER_DOWN, N_FLOORS-1);
+  if (next_floor != -1) {
+      if (next_floor > floor) {
+          return START_UP;
+      } else {
+          return START_DOWN;
+      }
+  }
+
+  /* Nothing to do */
+  return NOEVENT;
 }
 
 void car_init (void) {
   if (elev_get_floor_sensor_signal() == -1) {
     elev_set_speed (SPEED_DOWN);
+    
+    /* Loop until we reach a floor */
     while (elev_get_floor_sensor_signal() == -1);
   }
 
@@ -185,7 +275,9 @@ void car_init (void) {
 /* Update the state machine */
 void car_update_state (void) {
     new_event = get_new_event ();
-    if (((new_event >= 0) && (new_event <= N_EVENTS)) && ((current_state >= 0) && (current_state <= N_STATES)))
+    if (((new_event >= 0) && (new_event <= N_EVENTS)) && ((current_state >= 0) && (current_state <= N_STATES))) {
         state_table [current_state][new_event] ();
-    printf("Current state: %i\n", current_state);
+    } else {
+        /* invalid */
+    }
 }
