@@ -39,27 +39,31 @@ int ui_check_order(order_type_t type, int floor) {
 
 /**
  * ui_get_nearest_order:
- * @dir: a #direction_t
+ * @dir: an #order_type_t
  * @floor: a floor number
  *
- * Finds the nearest order from floor in the given direction, or -1.
+ * Finds the nearest order from floor in the given direction.
  *
- * Returns: An int specifying the floor with the nearest order.
+ * Returns: An int specifying the floor with the nearest order, or -1.
  */
-int ui_get_nearest_order(direction_t dir, int floor) {
-    switch (dir) {
-      case UP:
-        for (int i = floor; i < N_FLOORS; i++) {
-            if (ui_check_order(ORDER_UP, i) || ui_check_order(ORDER_CAR, i)) {
+int ui_get_nearest_order(order_type_t type, int floor) {
+    switch (type) {
+      case ORDER_UP:
+        for (int i = floor; i < N_FLOORS-1; i++) {
+            if (ui_check_order(ORDER_UP, i))
                 return i;
-            }
         }
         break;
-      case DOWN:
+      case ORDER_DOWN:
         for (int i = floor; i > 0; i--) {
-            if (ui_check_order(ORDER_DOWN, i) || ui_check_order(ORDER_CAR, i)) {
+            if (ui_check_order(ORDER_DOWN, i))
                 return i;
-            }
+        }
+        break;
+      case ORDER_CAR:
+        for (int i = floor; i < N_FLOORS; i++) {
+            if (ui_check_order(ORDER_CAR, i))
+                return i;
         }
         break;
     }
