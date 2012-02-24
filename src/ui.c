@@ -39,39 +39,51 @@ int ui_check_order(order_type_t type, int floor) {
 
 /**
  * ui_get_nearest_order:
- * @dir: an #order_type_t
+ * @type: an #order_type_t
  * @floor: a floor number
  *
- * Finds the nearest order from floor in the given direction.
+ * Finds the nearest order from floor of the given type.
  *
  * Returns: An int specifying the floor with the nearest order, or -1.
  */
 int ui_get_nearest_order(order_type_t type, int floor) {
-    switch (type) {
-      case ORDER_UP:
-        for (int i = floor+1; i < N_FLOORS-1; i++) {
-            if (ui_check_order(ORDER_UP, i)) {
-                printf("ORDER_UP found at floor %i\n", i);
-                return i;
-            }
+    int distance = N_FLOORS;
+
+    for (int i = 0; i < N_FLOORS; i++) {
+        if (ui_check_order(type, i) && ((floor - i) < distance)) {
+            distance = floor - i;
         }
-        break;
-      case ORDER_DOWN:
-        for (int i = floor-1; i > 0; i--) {
-            if (ui_check_order(ORDER_DOWN, i)) {
-                printf("ORDER_DOWN found at floor %i\n", i);
-                return i;
-            }
-        }
-        break;
-      case ORDER_CAR:
+    }
+
+    /* No order found */
+    if (distance == N_FLOORS) {
+        return -1;
+    }
+
+    return (floor - distance);
+}
+
+/**
+ * ui_get_nearest_order_in_direction:
+ * @type: an #order_type_t
+ * @dir: a #direction_t
+ * @floor: a floor number
+ *
+ * Finds the nearest order from floor of the given type in the given direction.
+ *
+ * Returns: An int specifying the floor with the nearest order, or -1.
+ */
+int ui_get_nearest_order_in_direction(order_type_t type, direction_t dir, int floor) {
+    if (dir == UP) {
         for (int i = floor; i < N_FLOORS; i++) {
-            if (ui_check_order(ORDER_CAR, i)) {
-                printf("ORDER_CAR found at floor %i\n", i);
+            if (ui_check_order(type, i))
                 return i;
-            }
         }
-        break;
+    } else if (dir == DOWN) {
+        for (int i = floor; i >= 0; i--) {
+            if (ui_check_order(type, i))
+              return i;
+        }
     }
 
     return -1;

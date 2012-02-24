@@ -23,6 +23,7 @@ typedef struct {
 void ui_add_order (order_type_t type, int floor);
 int ui_check_order (order_type_t type, int floor);
 int ui_get_nearest_order (order_type_t type, int floor);
+int ui_get_nearest_order_in_direction (order_type_t type, direction_t dir, int floor);
 void ui_remove_order (order_type_t type, int floor);
 void ui_clear_orders (void);
 void ui_print_orders (void);

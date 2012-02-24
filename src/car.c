@@ -36,6 +36,14 @@ static direction_t get_current_direction () {
     }
 }
 
+static direction_t get_opposite_direction () {
+    if (get_current_direction() == UP) {
+        return DOWN;
+    } else {
+        return UP;
+    }
+}
+
 /* Dummy action. No state transition. */
 static void action_dummy (void) {
     int floor = elev_get_floor_sensor_signal();
@@ -214,36 +222,64 @@ event_t get_new_event (void)
   }
   */
 
-  /* TODO: Always halt at the top and bottom floors */
-
   /* At a floor */
   if (floor != -1) {
       /* WORKS */
       /* See if the elevator has been ordered to the current floor*/
       order = ui_check_order(ORDER_CAR, floor);
       if (order) {
-          printf("Someone inside the elevator wants out.\n");
           return HALT;
       }
 
       /* WORKS */
       /* See if someone wants on in the direction we're going */
       order = ui_check_order((order_type_t)dir, floor);
-      printf("Direction is %i, checking if someone wants to go the same way\n", dir);
       if (order) {
-          printf("Someone wants to go the way direction we're going\n");
+          return HALT;
+      }
+
+      /* See if someone wants to go in the opposite direction of where we're going */
+      direction_t opp_dir = get_opposite_direction();
+      order = ui_check_order(opp_dir, floor);
+      printf("Opposite direction is %i, checking if someone wants to go the opposite way\n", opp_dir);
+      /* if order && ingen vil den veien vi har gått */
+      if (order && (ui_get_nearest_order_in_direction(ORDER_CAR, dir, floor) != -1) && (ui_get_nearest_order_in_direction((order_type_t)dir, dir, floor) != -1)) {
+          printf("There are no other orders, but someone wants to go the other way.\n");
           return HALT;
       }
 
       /* WORKS */
-      /* See if anyone has selected a floor */
-      next_floor = ui_get_nearest_order(ORDER_CAR, 0);
+      /* TODO: Only go to a floor if it's in the direction we're moving */
+      /* See if anyone in the elevator has selected a floor */
+      next_floor = ui_get_nearest_order(ORDER_CAR, floor);
       if (next_floor != -1) {
         if (next_floor > floor) {
-            printf("Someone in the elevator wants up\n");
             return START_UP;
         } else {
-            printf("Someone in the elevator wants down\n");
+            return START_DOWN;
+        }
+      }
+
+      /* See if someone wants to go up */
+      next_floor = ui_get_nearest_order(ORDER_UP, floor);
+      if (next_floor != -1) {
+        if (next_floor > floor) {
+            printf("Someone above wants to go up\n");
+            return START_UP;
+        } else {
+            printf("Someone below wants to go up\n");
+            return START_DOWN;
+        }
+      }
+
+      /* See if someone wants to go down */
+      next_floor = ui_get_nearest_order(ORDER_DOWN, floor);
+      if (next_floor != -1) {
+        if (next_floor > floor) {
+            printf("Someone above wants to go down\n");
+            return START_UP;
+        } else {
+            printf("Someone below wants to go down\n");
             return START_DOWN;
         }
       }
@@ -263,7 +299,7 @@ void car_init (void) {
     }
 
     smooth_stop();
-    last_state = IDLE;
+    last_state = MOVING_DOWN;
     current_state = IDLE;
     printf("Initialized\n");
 }
@@ -273,7 +309,6 @@ void car_update_state (void) {
     new_event = get_new_event ();
     if (((new_event >= 0) && (new_event <= N_EVENTS)) && ((current_state >= 0) && (current_state <= N_STATES))) {
         state_table [current_state][new_event] ();
-        printf("Current state: %i, last state: %i\n", current_state, last_state);
     } else {
         /* invalid */
     }
