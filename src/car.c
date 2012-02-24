@@ -181,12 +181,11 @@ void car_init (void) {
   smooth_stop();
   current_state = IDLE;
 }
-    
+  
 /* Update the state machine */
 void car_update_state (void) {
     new_event = get_new_event ();
-    if (((new_event >= 0) && (new_event <= N_EVENTS)) && ((current_state >= 0) && (current_state <= N_STATES))) 
+    if (((new_event >= 0) && (new_event <= N_EVENTS)) && ((current_state >= 0) && (current_state <= N_STATES)))
         state_table [current_state][new_event] ();
     printf("Current state: %i\n", current_state);
 }
-
