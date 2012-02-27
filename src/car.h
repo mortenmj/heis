@@ -4,8 +4,7 @@
 #define SPEED_UP 150
 #define SPEED_DOWN -150
 #define SPEED_HALT 0
-#define HALT_PAUSE 0
-#define STOP_PAUSE 0
+#define HALT_PAUSE 3
 
 typedef enum events {
     NOEVENT,

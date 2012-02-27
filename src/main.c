@@ -25,11 +25,8 @@ int main()
       car_update_state();
 
       usleep(50000);
-      //system("clear");
-      //ui_print_orders();
     }
   }
 
   return 0;
 }
-
