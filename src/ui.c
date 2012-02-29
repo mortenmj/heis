@@ -9,8 +9,6 @@
 /* Arrays for elevator orders . When an order is in effect the corresponding
  * variable is 1, otherwise it is 0 */
 int orders[N_ORDER_TYPES][N_FLOORS] = { {0} };
-int stop = 0;
-
 
 /**
  * ui_add_order:
@@ -146,13 +144,6 @@ void ui_print_orders(void) {
  */
 int ui_check_buttons(void) {
     int new_orders = 0;
-
-    if (elev_get_stop_signal()) {
-        stop = 1;
-        elev_set_stop_lamp(1);
-
-        return 1;
-    }
 
     /* Check order buttons */
     for (int button = 0; button < N_BUTTONS; button++) {

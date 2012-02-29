@@ -7,6 +7,7 @@
 #include <libheis/elev.h>
 
 #include "car.h"
+#include "safety.h"
 #include "ui.h"
 
 int main()
@@ -20,12 +21,11 @@ int main()
   car_init();
 
   while(1) {
-    // check IO
-    if (ui_check_buttons() || elev_get_floor_sensor_signal() != -1) {
+      safety_get_status();
+      ui_check_buttons();
       car_update_state();
 
       usleep(50000);
-    }
   }
 
   return 0;

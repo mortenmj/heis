@@ -4,6 +4,7 @@
 #include <libheis/elev.h>
 
 #include "car.h"
+#include "safety.h"
 #include "ui.h"
 
 extern int orders[N_ORDER_TYPES][N_FLOORS];
@@ -17,6 +18,13 @@ event_t new_event;
 static void stop_motor () {
     DEBUG_PRINT("Stopping motor\n");
     elev_set_speed (SPEED_HALT);
+}
+
+static void stop_button_pressed () {
+    if (last_state != STOPPED) {
+      ui_clear_orders();
+      stop_motor();
+    }
 }
 
 static void halt() {
@@ -87,7 +95,7 @@ static void action_moving_up_halt (void) {
 
 /* From MOVING_UP, go to STOPPED */
 static void action_moving_up_stop (void) {
-    stop_motor();
+    stop_button_pressed();
 
     last_state = current_state;
     current_state = STOPPED;
@@ -116,7 +124,7 @@ static void action_moving_down_halt (void) {
 
 /* From DOWN, go to STOPPED*/
 static void action_moving_down_stop (void) {
-    stop_motor();
+    stop_button_pressed();
 
     last_state = current_state;
     current_state = STOPPED;
@@ -160,6 +168,8 @@ static void action_idle_halt (void) {
 
 /* From IDLE, go to STOPPED */
 static void action_idle_stop (void) {
+    stop_button_pressed();
+
     last_state = current_state;
     current_state = STOPPED;
 }
@@ -174,10 +184,9 @@ static void action_stopped_halt (void) {
 
 /* From STOPPED, go to MOVING_UP */
 static void action_stopped_start_up (void) {
+    printf("Leaving stopped, starting up\n");
     elev_set_door_open_lamp(0);
     elev_set_speed (SPEED_UP);
-
-    stop = 0;
 
     last_state = current_state;
     current_state = MOVING_UP;
@@ -185,13 +194,23 @@ static void action_stopped_start_up (void) {
 
 /* From STOPPED, go to MOVING_DOWN */
 static void action_stopped_start_down(void) {
+    printf("Leaving stopped, starting down\n");
     elev_set_door_open_lamp(0);
     elev_set_speed (SPEED_DOWN);
 
-    stop = 0;
-
     last_state = current_state;
     current_state = MOVING_DOWN;
+}
+
+/* From STOPPED, go to STOPPED */
+static void action_stopped_stop(void) {
+    /* If there are car orders, we should reset the stop button */
+    if (ui_get_nearest_order(ORDER_CAR, 0) != -1) {
+        safety_reset();
+    }
+
+    last_state = current_state;
+    current_state = STOPPED;
 }
 
 void (*const state_table [N_STATES][N_EVENTS]) (void) = {
@@ -200,7 +219,7 @@ void (*const state_table [N_STATES][N_EVENTS]) (void) = {
     { action_dummy, action_idle_start_up, action_idle_start_down, action_idle_halt, action_idle_stop },                /* events for state IDLE */
     { action_dummy, action_dummy, action_dummy, action_moving_up_halt, action_moving_up_stop },                        /* events for state MOVING_UP */
     { action_dummy, action_dummy, action_dummy, action_moving_down_halt, action_moving_down_stop },                    /* events for state MOVING_DOWN */
-    { action_dummy, action_stopped_start_up, action_stopped_start_down, action_stopped_halt, action_dummy }            /* events for state STOPPED */
+    { action_dummy, action_stopped_start_up, action_stopped_start_down, action_stopped_halt, action_stopped_stop }            /* events for state STOPPED */
 };
 
 event_t get_new_event (void)
@@ -213,13 +232,31 @@ event_t get_new_event (void)
 
   /* Check the stop button */
   if (stop) {
-      DEBUG_PRINT("Stop button pressed; stopping\n");
-      ui_clear_orders();
+      printf("Stop button pressed; stopping\n");
       return STOP;
+  }
+
+  if (current_state == STOPPED && !stop) {
+      next_floor = ui_get_nearest_order(ORDER_CAR, last_floor);
+      if (next_floor != -1) {
+        if (next_floor > last_floor) {
+            printf("Going up\n");
+            printf("Last state: %i", last_state);
+            printf("current state: %i", current_state);
+            return START_UP;
+        } else {
+            printf("Going down\n");
+            printf("Last state: %i", last_state);
+            printf("current state: %i", current_state);
+            return START_DOWN;
+        }
+      }
   }
 
   /* At a floor */
   if (floor != -1) {
+      last_floor = floor;
+
       if (time(NULL) < wait_until) {
           DEBUG_PRINT("Waiting at floor.\n");
           return NOEVENT;
@@ -286,6 +323,12 @@ event_t get_new_event (void)
         } else {
             return START_DOWN;
         }
+      }
+
+      /* Make sure we don't go past the first or last floor */
+      if (floor == 0 || floor == N_FLOORS-1) {
+          DEBUG_PRINT("Failsafe: stop at top/bottom\n");
+          return HALT;
       }
   }
 

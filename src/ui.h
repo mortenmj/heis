@@ -1,5 +1,5 @@
-#ifndef __INCLUDE_CONTROL_H__
-#define __INCLUDE_CONTROL_H__
+#ifndef __INCLUDE_UI_H__
+#define __INCLUDE_UI_H__
 
 typedef enum {
     ORDER_UP,
@@ -29,4 +29,4 @@ void ui_clear_orders (void);
 void ui_print_orders (void);
 int ui_check_buttons (void);
 
-#endif /* __INCLUDE_CONTROL_H__ */
+#endif /* __INCLUDE_UI_H__ */
