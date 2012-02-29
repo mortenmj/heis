@@ -208,9 +208,6 @@ static void action_stopped_stop(void) {
     if (ui_get_nearest_order(ORDER_CAR, 0) != -1) {
         safety_reset();
     }
-
-    last_state = current_state;
-    current_state = STOPPED;
 }
 
 void (*const state_table [N_STATES][N_EVENTS]) (void) = {
@@ -232,7 +229,6 @@ event_t get_new_event (void)
 
   /* Check the stop button */
   if (stop) {
-      printf("Stop button pressed; stopping\n");
       return STOP;
   }
 
@@ -240,17 +236,22 @@ event_t get_new_event (void)
       next_floor = ui_get_nearest_order(ORDER_CAR, last_floor);
       if (next_floor != -1) {
         if (next_floor > last_floor) {
-            printf("Going up\n");
-            printf("Last state: %i", last_state);
-            printf("current state: %i", current_state);
             return START_UP;
-        } else {
-            printf("Going down\n");
-            printf("Last state: %i", last_state);
-            printf("current state: %i", current_state);
+        } else if (next_floor < last_floor) {
             return START_DOWN;
+        } else if (next_floor == last_floor) {
+            /* We're above the last floor */
+            if (get_current_direction() == UP) {
+                return START_DOWN;
+            } else if (get_current_direction() == DOWN) {
+                return START_UP;
+            } else {
+                DEBUG_PRINT(("Something went wrong resuming from stop. Falling back to reinitializing the elevator\n"));
+                car_init();
+            }
         }
       }
+      printf("EPIC FAIL\n");
   }
 
   /* At a floor */
@@ -343,6 +344,8 @@ void car_init (void) {
       
       /* Loop until we reach a floor */
       while (elev_get_floor_sensor_signal() == -1);
+
+      last_floor = elev_get_floor_sensor_signal();
     }
 
     stop_motor();

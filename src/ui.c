@@ -18,6 +18,12 @@ int orders[N_ORDER_TYPES][N_FLOORS] = { {0} };
  * Add an order to the order queue.  *
  */
 void ui_add_order(order_type_t type, int floor) {
+    if (type == ORDER_UP && floor == N_FLOORS-1)
+      return;
+
+    if (type == ORDER_DOWN && floor == 0)
+      return;
+
     elev_set_button_lamp(type, floor, 1);
     orders[type][floor] = 1;
 }
@@ -96,6 +102,12 @@ int ui_get_nearest_order_in_direction(order_type_t type, direction_t dir, int fl
  *
  */
 void ui_remove_order(order_type_t type, int floor) {
+    if (type == ORDER_UP && floor == N_FLOORS-1)
+      return;
+
+    if (type == ORDER_DOWN && floor == 0)
+      return;
+
     elev_set_button_lamp(type, floor, 0);
     orders[type][floor] = 0;
 }
