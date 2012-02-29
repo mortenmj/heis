@@ -1,6 +1,12 @@
 #ifndef __INCLUDE_MOTOR_H__
 #define __INCLUDE_MOTOR_H__
 
+#ifdef DEBUG
+#define DEBUG_PRINT(x) printf x
+#else
+#define DEBUG_PRINT(x) do {} while (0)
+#endif
+
 #define SPEED_UP 150
 #define SPEED_DOWN -150
 #define SPEED_HALT 0

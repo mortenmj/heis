@@ -15,11 +15,14 @@ state_t current_state, last_state;
 event_t new_event;
 
 static void stop_motor () {
+    DEBUG_PRINT("Stopping motor\n");
     elev_set_speed (SPEED_HALT);
 }
 
 static void halt() {
     int floor = elev_get_floor_sensor_signal();
+
+    DEBUG_PRINT("Halting\n");
 
     wait_until = time(NULL) + HALT_PAUSE;
     elev_set_door_open_lamp(1);
@@ -210,7 +213,7 @@ event_t get_new_event (void)
 
   /* Check the stop button */
   if (stop) {
-      printf("Stop button pressed; stopping\n");
+      DEBUG_PRINT("Stop button pressed; stopping\n");
       ui_clear_orders();
       return STOP;
   }
@@ -218,7 +221,7 @@ event_t get_new_event (void)
   /* At a floor */
   if (floor != -1) {
       if (time(NULL) < wait_until) {
-          printf("Doors are open\n");
+          DEBUG_PRINT("Waiting at floor.\n");
           return NOEVENT;
       }
 
@@ -226,6 +229,7 @@ event_t get_new_event (void)
       /* Halt if the elevator has been ordered to the current floor*/
       order = ui_check_order(ORDER_CAR, floor);
       if (order) {
+          DEBUG_PRINT("The elevator has been ordered to this floor. Halting.\n");
           return HALT;
       }
 
@@ -233,6 +237,7 @@ event_t get_new_event (void)
       /* Halt if someone wants to go the same direction we're going */
       order = ui_check_order((order_type_t)dir, floor);
       if (order) {
+          DEBUG_PRINT("Someone wants to go the same way the elevator is moving. Halting.\n");
           return HALT;
       }
 
@@ -241,7 +246,7 @@ event_t get_new_event (void)
       /* Halt if someone wants to go the opposite direction we're going */
       order = ui_check_order(opp_dir, floor);
       if (order && (ui_get_nearest_order_in_direction(ORDER_CAR, dir, floor) != -1) && (ui_get_nearest_order_in_direction((order_type_t)dir, dir, floor) != -1)) {
-          printf("There are no other orders, but someone wants to go the other way.\n");
+          DEBUG_PRINT("Someone wants to go the opposite way the elevator is moving, but we have no other orders. Halting.\n");
           return HALT;
       }
 
@@ -250,7 +255,6 @@ event_t get_new_event (void)
       /* See if anyone in the elevator has selected a floor */
       next_floor = ui_get_nearest_order(ORDER_CAR, floor);
       if (next_floor != -1) {
-        printf("Car call found at floor %i, current floor is %i\n", next_floor, floor);
         if (next_floor > floor) {
             return START_UP;
         } else {
@@ -261,7 +265,7 @@ event_t get_new_event (void)
       /* See if someone wants to go up */
       next_floor = ui_get_nearest_order(ORDER_UP, floor);
       if (next_floor != -1) {
-        printf("Up order found at floor %i, current floor is %i\n", next_floor, floor);
+        DEBUG_PRINT(("Up order found at floor %i, current floor is %i\n", next_floor, floor));
         if (next_floor == floor) { 
             return HALT;
         } else if (next_floor > floor) {
@@ -274,7 +278,7 @@ event_t get_new_event (void)
       /* See if someone wants to go down */
       next_floor = ui_get_nearest_order(ORDER_DOWN, floor);
       if (next_floor != -1) {
-        printf("Down order found at floor %i, current floor is %i\n", next_floor, floor);
+        DEBUG_PRINT(("Down order found at floor %i, current floor is %i\n", next_floor, floor));
         if (next_floor == floor) {
             return HALT;
         } else if  (next_floor > floor) {
@@ -290,7 +294,7 @@ event_t get_new_event (void)
 }
 
 void car_init (void) {
-    printf("Initializing\n");
+    DEBUG_PRINT("Initializing\n");
     if (elev_get_floor_sensor_signal() == -1) {
       elev_set_speed (SPEED_DOWN);
       
@@ -301,13 +305,14 @@ void car_init (void) {
     stop_motor();
     last_state = MOVING_DOWN;
     current_state = IDLE;
-    printf("Initialized\n");
+    DEBUG_PRINT("Initialization complete\n");
 }
   
 /* Update the state machine */
 void car_update_state (void) {
     new_event = get_new_event ();
     if (((new_event >= 0) && (new_event <= N_EVENTS)) && ((current_state >= 0) && (current_state <= N_STATES))) {
+        DEBUG_PRINT(("New event: %i\n", new_event));
         state_table [current_state][new_event] ();
     } else {
         /* invalid */
