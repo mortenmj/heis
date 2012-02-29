@@ -18,6 +18,22 @@ AC_CONFIG_FILES([
     src/Makefile
 ])
 
+AC_ARG_ENABLE(debug,
+  AC_HELP_STRING([--disable-debug],[compile without debug code]),
+    enable_debug=$enableval, enable_debug=yes )
+
+AC_ARG_ENABLE(backtrace,
+                AC_HELP_STRING([--enable-backtrace],[enable printing out the backtrace in case of crash]),
+                    enable_backtrace=$enableval, enable_backtrace=no )
+
+if test x$enable_debug = xyes; then
+  AC_DEFINE(ENABLE_DEBUG, [], [Enable debug code])
+fi
+
+if test x$enable_backtrace = xyes; then
+  AC_DEFINE(ENABLE_BACKTRACE, [], [Enable backtrace output on crashes])
+fi
+
 COMEDI_MIN_VERSION=0.8.1
 
 PKG_CHECK_MODULES(LIBHEIS, 
