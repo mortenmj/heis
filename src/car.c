@@ -8,22 +8,19 @@
 #include "safety.h"
 #include "ui.h"
 
-extern int orders[N_ORDER_TYPES][N_FLOORS]; extern int stop;
+extern int orders[N_ORDER_TYPES][N_FLOORS];
 
 int last_floor;
 car_state_t car_current_state, car_last_state;
 car_event_t new_event;
 
 static void stop_motor () {
-    printf("Stopping motor\n");
     elev_set_speed (SPEED_HALT);
 }
 
 static void stop_button_pressed () {
-    if (car_last_state != CAR_STOPPED) {
-      ui_clear_orders();
-      stop_motor();
-    }
+    ui_clear_orders();
+    stop_motor();
 }
 
 static void halt() {
@@ -217,8 +214,7 @@ static car_event_t get_new_event (void)
   printf("Getting new car event\n");
   
   /* Check the stop button */
-  if (stop) {
-      printf("Stop button pressed");
+  if (safety_get_state()) {
       return CAR_STOP;
   }
 
@@ -228,7 +224,7 @@ static car_event_t get_new_event (void)
       return CAR_NOEVENT;
   }
 
-  if (car_current_state == CAR_STOPPED && !stop) {
+  if (car_current_state == CAR_STOPPED && !safety_get_state()) {
       next_floor = ui_get_nearest_order(ORDER_CAR, last_floor);
       if (next_floor != -1) {
         if (next_floor > last_floor) {

@@ -26,7 +26,7 @@ int main()
   car_init();
 
   while(1) {
-      safety_get_status();
+      safety_update_state();
       ui_check_buttons();
       car_update_state();
       door_update_state();

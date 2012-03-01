@@ -2,12 +2,18 @@
 
 int stop = 0;
 
-int safety_get_status () {
+/* Check stop button, update state, return value */
+int safety_update_state () {
     if (elev_get_stop_signal()) {
-        stop = 1;
-        elev_set_stop_lamp(1);
-        return 1;
+      stop = 1;
+      elev_set_stop_lamp(1);
     }
+
+    return stop;
+}
+
+int safety_get_state () {
+    return stop;
 }
 
 void safety_reset () {
