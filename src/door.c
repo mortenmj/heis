@@ -1,9 +1,12 @@
+#include "config.h"
+
+#include "door.h"
+
 #include <stdio.h>
 #include <time.h>
 #include <libheis/elev.h>
 
 #include "debug.h"
-#include "door.h"
 
 #define HALT_PAUSE 3
 

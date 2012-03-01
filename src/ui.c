@@ -1,3 +1,5 @@
+#include "config.h"
+
 #include "ui.h"
 
 #include <stdlib.h>
@@ -5,6 +7,7 @@
 #include <libheis/elev.h>
 
 #include "car.h"
+#include "debug.h"
 
 /* Arrays for elevator orders . When an order is in effect the corresponding
  * variable is 1, otherwise it is 0 */

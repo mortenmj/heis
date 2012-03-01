@@ -1,4 +1,8 @@
+#include "config.h"
+
 #include <libheis/elev.h>
+
+#include "debug.h"
 
 int stop = 0;
 
