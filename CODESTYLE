@@ -1,0 +1,14 @@
+Don't use a common prefix for source files. Tab completion is good.
+Library files should go in a top level directory, so that it can be compiled easily.
+
+config.h sometimes includes things inline, and should be the first in any file that includes it.
+Next, include the header file for the source file, so that all public headers are self-contained.
+Next, include any libc headers.
+Next, include any non-standard library headers (i.e. libheis)
+Finally, include any private headers
+
+Use GNU-style indentation.
+Functions are defined with the function return type and function name on separate lines, while declaration is one line, so that grep ^function-name only returns the definition.
+Two blank lines between function definitions.
+
+Never use explicit checks for true or false. Always use explicit checks for non-boolean int values (i.e. implicit check for an int that only returns 0 or 1 is fine).
