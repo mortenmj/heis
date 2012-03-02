@@ -1,26 +1,54 @@
 #include "config.h"
 
+#include <stdbool.h>
+
 #include <libheis/elev.h>
 
 #include "debug.h"
 
-int stop = 0;
+bool stop = false;
 
-/* Check stop button, update state, return value */
-int safety_update_state () {
+
+/**
+ * safety_get_state:
+ * 
+ * Checks if the stop button is pressed, and sets the stop button flag if it is.
+ * 
+ * Returns: true if the stop button is set, or false.
+ */
+bool
+safety_update_state (void)
+{
     if (elev_get_stop_signal()) {
-      stop = 1;
+      stop = true;
       elev_set_stop_lamp(1);
     }
 
     return stop;
 }
 
-int safety_get_state () {
+
+/**
+ * safety_get_state:
+ * 
+ * Returns: true if the stop button flag is set, or false.
+ *
+ */
+bool
+safety_get_state (void)
+{
     return stop;
 }
 
-void safety_reset () {
-    stop = 0;
+
+/**
+ * safety_get_state:
+ * 
+ * Resets the stop button flag.
+ *
+ */
+void
+safety_reset (void) {
+    stop = false;
     elev_set_stop_lamp(0);
 }

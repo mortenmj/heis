@@ -1,22 +1,24 @@
 #ifndef __INCLUDE_DOOR_H__
 #define __INCLUDE_DOOR_H__
 
-typedef enum door_events {
+#include <stdbool.h>
+
+typedef enum {
     DOOR_NOEVENT,
     DOOR_OPEN,
     DOOR_CLOSE,
     N_DOOR_EVENTS
 } door_event_t;
 
-typedef enum door_states {
+typedef enum {
     DOOR_OPENED,
     DOOR_CLOSED,
     N_DOOR_STATES
 } door_state_t;
 
-void door_init();
-int  door_closed();
-void door_set_timer();
-void door_update_state();
+void door_init (void);
+bool  door_closed (void);
+void door_set_timer (void);
+void door_update_state (void);
 
-#endif /* __INCLUDE_MOTOR_H__ */
+#endif /* __INCLUDE_DOOR_H__ */

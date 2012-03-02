@@ -11,15 +11,14 @@
 #include "safety.h"
 #include "ui.h"
 
-int main()
+int
+main()
 {
   // Initialize hardware
   if (!elev_init()) {
       DEBUG((__FILE__ ": Unable to initialize elevator hardware\n"));
       return 1;
   }
-
-  DEBUG(("Debug enabled\n"));
 
   door_init();
   car_init();
@@ -30,7 +29,7 @@ int main()
       car_update_state();
       door_update_state();
 
-      usleep(50000);
+      sleep(0.1);
   }
 
   return 0;
