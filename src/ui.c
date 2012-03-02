@@ -80,20 +80,19 @@ int
 ui_get_nearest_order (order_type_t type,
     int floor)
 {
-    int distance = N_FLOORS;
+  int distance = N_FLOORS;
 
-    for (int i = 0; i < N_FLOORS; i++) {
-        if (ui_check_order(type, i) && ((floor - i) < distance)) {
-            distance = floor - i;
-        }
+  for (int i = 0; i < N_FLOORS; i++)
+    {
+      if (ui_check_order(type, i) && ((floor - i) < distance))
+        distance = floor - i;
     }
 
-    /* No order found */
-    if (distance == N_FLOORS) {
-        return -1;
-    }
+  /* No order found */
+  if (distance == N_FLOORS)
+    return -1;
 
-    return (floor - distance);
+  return (floor - distance);
 }
 
 
@@ -112,19 +111,24 @@ ui_get_nearest_order_in_direction (order_type_t type,
     direction_t dir,
     int floor)
 {
-    if (dir == UP) {
-        for (int i = floor; i < N_FLOORS; i++) {
-            if (ui_check_order(type, i))
-                return i;
+  if (dir == UP)
+    {
+      for (int i = floor; i < N_FLOORS; i++)
+        {
+          if (ui_check_order(type, i))
+            return i;
         }
-    } else if (dir == DOWN) {
-        for (int i = floor; i >= 0; i--) {
-            if (ui_check_order(type, i))
-              return i;
+    }
+  else if (dir == DOWN)
+    {
+      for (int i = floor; i >= 0; i--)
+        {
+          if (ui_check_order(type, i))
+            return i;
         }
     }
 
-    return -1;
+  return -1;
 }
 
 
@@ -142,19 +146,19 @@ bool
 ui_remove_order (order_type_t type,
     int floor)
 {
-    if (type == ORDER_UP && floor == N_FLOORS-1)
-      return false;
+  if (type == ORDER_UP && floor == N_FLOORS-1)
+    return false;
 
-    if (type == ORDER_DOWN && floor == 0)
-      return false;
+  if (type == ORDER_DOWN && floor == 0)
+    return false;
 
-    if (!ui_check_order(type, floor))
-      return false;
+  if (!ui_check_order(type, floor))
+    return false;
 
-    elev_set_button_lamp(type, floor, 0);
-    orders[type][floor] = 0;
+  elev_set_button_lamp(type, floor, 0);
+  orders[type][floor] = 0;
 
-    return true;
+  return true;
 }
 
 
@@ -167,14 +171,15 @@ ui_remove_order (order_type_t type,
 void
 ui_clear_orders (void)
 {
-    for (int type = 0; type < N_ORDER_TYPES; type++) {
-        for (int floor = 0; floor < N_FLOORS; floor++) {
+  for (int type = 0; type < N_ORDER_TYPES; type++)
+    {
+      for (int floor = 0; floor < N_FLOORS; floor++)
+        {
+          /* Ignore orders that don't exist */
+          if (type == ORDER_DOWN && floor == 0 || type == ORDER_UP && floor == 3)
+            continue;
 
-            /* Ignore orders that don't exist */
-            if (type == ORDER_DOWN && floor == 0 || type == ORDER_UP && floor == 3)
-              continue;
-
-            ui_remove_order(type, floor);
+          ui_remove_order(type, floor);
         }
     }
 }
@@ -191,34 +196,36 @@ ui_clear_orders (void)
 bool
 ui_check_buttons (void)
 {
-    int new_orders = 0;
+  int new_orders = 0;
 
-    /* Check order buttons */
-    for (int button_type = 0; button_type < N_BUTTONS; button_type++) {
-        for (int floor = 0; floor < N_FLOORS; floor++) {
-
-            /* Ignore buttons that don't exist */
-            if (button_type == BUTTON_CALL_DOWN && floor == 0 || button_type == BUTTON_CALL_UP && floor == 3)
-              continue;
-            
-            /* Button presses are registered when the button is released.
-               We set a button as active when we register that it is pressed,
-               and we register an order if a previously activated button is no longer pressed.
-             */
-            if (elev_get_button_signal(button_type, floor)) {
-                buttons[button_type][floor] = true;
-            } else {
-                if (buttons[button_type][floor]) {
-                    if (!ui_check_order(button_type, floor)) {
-                        ui_add_order(button_type, floor);
-                        new_orders = 1;
+  /* Check order buttons */
+  for (int button_type = 0; button_type < N_BUTTONS; button_type++)
+    {
+      for (int floor = 0; floor < N_FLOORS; floor++)
+        {
+          /* Ignore buttons that don't exist */
+          if ((button_type == BUTTON_CALL_DOWN && floor == 0) || (button_type == BUTTON_CALL_UP && floor == 3))
+            continue;
+          
+          /* Button presses are registered when the button is released.
+             We set a button as active when we register that it is pressed,
+             and we register an order if a previously activated button is no longer pressed.
+           */
+          if (elev_get_button_signal(button_type, floor))
+              buttons[button_type][floor] = true;
+          else
+            {
+              if (buttons[button_type][floor])
+                {
+                  if (!ui_check_order(button_type, floor))
+                    {
+                      ui_add_order(button_type, floor);
+                      new_orders = 1;
                     }
-
-                    buttons[button_type][floor] = false;
+                  buttons[button_type][floor] = false;
                 }
             }
         }
     }
-
-    return new_orders;
+  return new_orders;
 }

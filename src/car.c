@@ -13,6 +13,9 @@
 #include "safety.h"
 #include "ui.h"
 
+#define VALID_EVENT(event) event >= 0 && event <= N_CAR_EVENTS 
+#define VALID_STATE(state) state >= 0 && state <= N_CAR_STATES
+
 int last_floor;
 car_state_t car_current_state, car_last_state;
 car_event_t new_event;
@@ -23,27 +26,23 @@ car_event_t new_event;
 static void
 stop_motor (void)
 {
-    elev_set_speed (SPEED_HALT);
+  elev_set_speed (SPEED_HALT);
 }
 
 
 static void
 stop_button_pressed (void)
 {
-    ui_clear_orders();
-    stop_motor();
+  ui_clear_orders();
+  stop_motor();
 }
 
 
 static void
 halt_elevator (void)
 {
-    int floor = elev_get_floor_sensor_signal();
-
-    door_set_timer();
-
-    elev_set_floor_indicator(floor);
-    stop_motor();
+  door_set_timer();
+  stop_motor();
 }
 
 
@@ -51,28 +50,25 @@ halt_elevator (void)
 static direction_t
 get_current_direction (void)
 {
-    car_state_t state;
-    if (car_current_state == 1 || car_current_state == 2) {
-        state = car_current_state;
-    } else {
-        state = car_last_state;
-    }
+  car_state_t state;
+  
+  state = (car_current_state == 1 || car_current_state == 2) ? car_current_state : car_last_state;
 
-    switch (state) {
-      case CAR_MOVING_UP:
-        return UP;
-      case CAR_MOVING_DOWN:
-        return DOWN;
-      default:
-        return NONE;
-    }
+  switch (state) {
+    case CAR_MOVING_UP:
+      return UP;
+    case CAR_MOVING_DOWN:
+      return DOWN;
+    default:
+      return NONE;
+  }
 }
 
 
 static direction_t
 get_opposite_direction (void)
 {
-    return get_current_direction() == UP ? DOWN : UP;
+  return get_current_direction() == UP ? DOWN : UP;
 }
 
 
@@ -80,10 +76,6 @@ get_opposite_direction (void)
 static void
 action_dummy (void)
 {
-    int floor = elev_get_floor_sensor_signal();
-
-    if (floor != -1)
-      elev_set_floor_indicator(floor);
 }
 
 
@@ -91,31 +83,30 @@ action_dummy (void)
 static void
 action_moving_up_halt (void)
 {
-    int floor = elev_get_floor_sensor_signal();
+  int floor = elev_get_floor_sensor_signal();
 
-    halt_elevator();
+  halt_elevator();
+  ui_remove_order(ORDER_CAR, floor);
 
-    ui_remove_order(ORDER_CAR, floor);
-    /* If there is no order up, we expedite any order up */
-    if (ui_check_order(ORDER_UP, floor)) {
-      ui_remove_order(ORDER_UP, floor);
-      } else {
-        ui_remove_order(ORDER_DOWN, floor);
-      }
+  /* If there is no order up, we expedite any order up */
+  if (ui_check_order(ORDER_UP, floor))
+    ui_remove_order(ORDER_UP, floor);
+  else
+    ui_remove_order(ORDER_DOWN, floor);
 
-    car_last_state = car_current_state;
-    car_current_state = CAR_IDLE;
-  }
+  car_last_state = car_current_state;
+  car_current_state = CAR_IDLE;
+}
 
 
 /* From CAR_MOVING_UP, go to CAR_STOPPED */
 static void
 action_moving_up_stop (void)
 {
-    stop_button_pressed();
+  stop_button_pressed();
 
-    car_last_state = car_current_state;
-    car_current_state = CAR_STOPPED;
+  car_last_state = car_current_state;
+  car_current_state = CAR_STOPPED;
 }
 
 
@@ -123,20 +114,19 @@ action_moving_up_stop (void)
 static void
 action_moving_down_halt (void)
 {
-    int floor = elev_get_floor_sensor_signal();
+  int floor = elev_get_floor_sensor_signal();
 
-    halt_elevator();
+  halt_elevator();
+  ui_remove_order(ORDER_CAR, floor);
 
-    ui_remove_order(ORDER_CAR, floor);
-    /* If there is no order down, we expedite any order up */
-    if (ui_check_order(ORDER_DOWN, floor)) {
-      ui_remove_order(ORDER_DOWN, floor);
-      } else {
-        ui_remove_order(ORDER_UP, floor);
-      }
+  /* If there is no order down, we expedite any order up */
+  if (ui_check_order(ORDER_DOWN, floor))
+    ui_remove_order(ORDER_DOWN, floor);
+  else
+    ui_remove_order(ORDER_UP, floor);
 
-    car_last_state = car_current_state;
-    car_current_state = CAR_IDLE;
+  car_last_state = car_current_state;
+  car_current_state = CAR_IDLE;
 }
 
 
@@ -144,10 +134,10 @@ action_moving_down_halt (void)
 static void
 action_moving_down_stop (void)
 {
-    stop_button_pressed();
+  stop_button_pressed();
 
-    car_last_state = car_current_state;
-    car_current_state = CAR_STOPPED;
+  car_last_state = car_current_state;
+  car_current_state = CAR_STOPPED;
 }
 
 
@@ -155,10 +145,10 @@ action_moving_down_stop (void)
 static void
 action_idle_start_up(void)
 {
-    elev_set_speed (SPEED_UP);
+  elev_set_speed (SPEED_UP);
 
-    car_last_state = car_current_state;
-    car_current_state = CAR_MOVING_UP;
+  car_last_state = car_current_state;
+  car_current_state = CAR_MOVING_UP;
 }
 
 
@@ -166,10 +156,10 @@ action_idle_start_up(void)
 static void
 action_idle_start_down (void)
 {
-    elev_set_speed (SPEED_DOWN);
+  elev_set_speed (SPEED_DOWN);
 
-    car_last_state = car_current_state;
-    car_current_state = CAR_MOVING_DOWN;
+  car_last_state = car_current_state;
+  car_current_state = CAR_MOVING_DOWN;
 }
 
 
@@ -177,20 +167,24 @@ action_idle_start_down (void)
 static void
 action_idle_halt (void)
 {
-    int floor = elev_get_floor_sensor_signal();
+  int floor = elev_get_floor_sensor_signal();
 
-    if (ui_check_order(ORDER_CAR, floor)) {
-        ui_remove_order(ORDER_CAR, floor);
-        halt_elevator();
-        return;
+  if (ui_check_order(ORDER_CAR, floor))
+    {
+      ui_remove_order(ORDER_CAR, floor);
+      halt_elevator();
+      return;
     }
 
-    if (ui_check_order(get_current_direction(), floor)) {
-        ui_remove_order(get_current_direction(), floor);
-        halt_elevator();
-    } else {
-        ui_remove_order(get_opposite_direction(), floor);
-        halt_elevator();
+  if (ui_check_order(get_current_direction(), floor))
+    {
+      ui_remove_order(get_current_direction(), floor);
+      halt_elevator();
+    }
+  else
+    {
+      ui_remove_order(get_opposite_direction(), floor);
+      halt_elevator();
     }
 }
 
@@ -199,10 +193,10 @@ action_idle_halt (void)
 static void
 action_idle_stop (void)
 {
-    stop_button_pressed();
+  stop_button_pressed();
 
-    car_last_state = car_current_state;
-    car_current_state = CAR_STOPPED;
+  car_last_state = car_current_state;
+  car_current_state = CAR_STOPPED;
 }
 
 
@@ -210,10 +204,10 @@ action_idle_stop (void)
 static void
 action_stopped_halt (void)
 {
-    stop_motor();
+  stop_motor();
 
-    car_last_state = car_current_state;
-    car_current_state = CAR_IDLE;
+  car_last_state = car_current_state;
+  car_current_state = CAR_IDLE;
 }
 
 
@@ -221,10 +215,10 @@ action_stopped_halt (void)
 static void
 action_stopped_start_up (void)
 {
-    elev_set_speed (SPEED_UP);
+  elev_set_speed (SPEED_UP);
 
-    car_last_state = car_current_state;
-    car_current_state = CAR_MOVING_UP;
+  car_last_state = car_current_state;
+  car_current_state = CAR_MOVING_UP;
 }
 
 
@@ -232,10 +226,10 @@ action_stopped_start_up (void)
 static void
 action_stopped_start_down(void)
 {
-    elev_set_speed (SPEED_DOWN);
+  elev_set_speed (SPEED_DOWN);
 
-    car_last_state = car_current_state;
-    car_current_state = CAR_MOVING_DOWN;
+  car_last_state = car_current_state;
+  car_current_state = CAR_MOVING_DOWN;
 }
 
 
@@ -243,20 +237,18 @@ action_stopped_start_down(void)
 static void
 action_stopped_stop(void)
 {
-    /* If there are car orders, we should reset the stop button */
-    if (ui_get_nearest_order(ORDER_CAR, 0) != -1) {
-        safety_reset();
-    }
+  /* If there are car orders, we should reset the stop button */
+  if (ui_get_nearest_order(ORDER_CAR, 0) != -1)
+    safety_reset();
 }
 
 
 void (*const car_state_table [N_CAR_STATES][N_CAR_EVENTS]) (void) = {
-
-      /* CAR_NOEVENT      CAR_START_UP     CAR_START_DOWN           CAR_HALT                   CAR_STOP */
-    { action_dummy, action_idle_start_up, action_idle_start_down, action_idle_halt, action_idle_stop },                /* events for state CAR_IDLE */
-    { action_dummy, action_dummy, action_dummy, action_moving_up_halt, action_moving_up_stop },                        /* events for state CAR_MOVING_UP */
-    { action_dummy, action_dummy, action_dummy, action_moving_down_halt, action_moving_down_stop },                    /* events for state CAR_MOVING_DOWN */
-    { action_dummy, action_stopped_start_up, action_stopped_start_down, action_stopped_halt, action_stopped_stop }     /* events for state CAR_STOPPED */
+    /* CAR_NOEVENT  CAR_START_UP             CAR_START_DOWN             CAR_HALT                 CAR_STOP */
+    { action_dummy, action_idle_start_up,    action_idle_start_down,    action_idle_halt,        action_idle_stop },            /* events for state CAR_IDLE */
+    { action_dummy, action_dummy,            action_dummy,              action_moving_up_halt,   action_moving_up_stop },       /* events for state CAR_MOVING_UP */
+    { action_dummy, action_dummy,            action_dummy,              action_moving_down_halt, action_moving_down_stop },     /* events for state CAR_MOVING_DOWN */
+    { action_dummy, action_stopped_start_up, action_stopped_start_down, action_stopped_halt,     action_stopped_stop }          /* events for state CAR_STOPPED */
 };
   
 
@@ -271,104 +263,104 @@ get_new_event (void)
   direction_t opp_dir = get_opposite_direction();
 
   /* Check the stop button */
-  if (safety_get_state()) {
-      return CAR_STOP;
-  }
+  if (safety_get_state())
+    return CAR_STOP;
 
   /* Check that the doors are closed */
-  if (!door_closed()) {
-      return CAR_NOEVENT;
-  }
+  if (!door_closed())
+    return CAR_NOEVENT;
 
-  if (car_current_state == CAR_STOPPED && !safety_get_state()) {
+  if (car_current_state == CAR_STOPPED && !safety_get_state())
+    {
       next_floor = ui_get_nearest_order(ORDER_CAR, last_floor);
-      if (next_floor != -1) {
-        if (next_floor > last_floor) {
+      if (next_floor != -1)
+        {
+          if (next_floor > last_floor)
             return CAR_START_UP;
-        } else if (next_floor < last_floor) {
+          else if (next_floor < last_floor)
             return CAR_START_DOWN;
-        } else if (next_floor == last_floor) {
-            /* We're above the last floor */
-            if (get_current_direction() == UP) {
-                return CAR_START_DOWN;
-            } else if (get_current_direction() == DOWN) {
-                return CAR_START_UP;
-            } else {
-                DEBUG(("Something went wrong resuming from stop. Falling back to reinitializing the elevator\n"));
-                car_init();
+          else if (next_floor == last_floor)
+            {
+              /* We're above the last floor */
+              if (get_current_direction() == UP)
+                  return CAR_START_DOWN;
+              else if (get_current_direction() == DOWN)
+                  return CAR_START_UP;
+              else
+                {
+                  DEBUG(("Something went wrong resuming from stop. Falling back to reinitializing the elevator\n"));
+                  car_init();
+                }
             }
-        }
       }
   }
 
   /* At a floor */
-  if (floor != -1) {
+  if (floor != -1)
+    {
       last_floor = floor;
 
       /* WORKS */
       /* Halt if the elevator has been ordered to the current floor*/
       order = ui_check_order(ORDER_CAR, floor);
-      if (order) {
-          return CAR_HALT;
-      }
+      if (order)
+        return CAR_HALT;
 
       /* WORKS */
       /* Halt if someone wants to go the same direction we're going */
       order = ui_check_order((order_type_t)dir, floor);
-      if (order) {
-          return CAR_HALT;
-      }
+      if (order)
+        return CAR_HALT;
 
       /* WORKS */
       /* If there are no orders further in our current direction */
       /* Halt if someone wants to go the opposite direction we're going */
       order = ui_check_order(opp_dir, floor);
-      if (order && (ui_get_nearest_order_in_direction(ORDER_CAR, dir, floor) != -1) && (ui_get_nearest_order_in_direction((order_type_t)dir, dir, floor) != -1)) {
-          return CAR_HALT;
-      }
+      if (order && (ui_get_nearest_order_in_direction(ORDER_CAR, dir, floor) != -1) && (ui_get_nearest_order_in_direction((order_type_t)dir, dir, floor) != -1))
+        return CAR_HALT;
 
       /* WORKS */
       /* TODO: Only go to a floor if it's in the direction we're moving */
       /* See if anyone in the elevator has selected a floor */
       next_floor = ui_get_nearest_order(ORDER_CAR, floor);
       if (next_floor != -1) {
-        if (next_floor > floor) {
-            return CAR_START_UP;
-        } else {
-            return CAR_START_DOWN;
-        }
+        if (next_floor > floor)
+          return CAR_START_UP;
+        else
+          return CAR_START_DOWN;
       }
 
       /* See if someone wants to go up */
       next_floor = ui_get_nearest_order(ORDER_UP, floor);
-      if (next_floor != -1) {
-        if (next_floor == floor) { 
+      if (next_floor != -1)
+        {
+          if (next_floor == floor)
             return CAR_HALT;
-        } else if (next_floor > floor) {
+          else if (next_floor > floor)
             return CAR_START_UP;
-        } else {
+          else
             return CAR_START_DOWN;
         }
-      }
 
       /* See if someone wants to go down */
       next_floor = ui_get_nearest_order(ORDER_DOWN, floor);
-      if (next_floor != -1) {
-        if (next_floor == floor) {
+      if (next_floor != -1)
+        {
+          if (next_floor == floor)
             return CAR_HALT;
-        } else if  (next_floor > floor) {
+          else if  (next_floor > floor)
             return CAR_START_UP;
-        } else {
+          else
             return CAR_START_DOWN;
         }
-      }
 
       /* Make sure we don't go past the first or last floor */
-      if ((floor == 0 && car_current_state == CAR_MOVING_DOWN) || (floor == N_FLOORS-1 && car_current_state == CAR_MOVING_UP)) {
+      if ((floor == 0 && car_current_state == CAR_MOVING_DOWN) || (floor == N_FLOORS-1 && car_current_state == CAR_MOVING_UP))
+        {
           DEBUG(("Failsafe: stop at top/bottom\n"));
           return CAR_HALT;
-      }
-  }
+        }
+    }
 
   /* Nothing to do */
   return CAR_NOEVENT;
@@ -380,7 +372,8 @@ get_new_event (void)
 void
 car_init (void)
 {
-    if (elev_get_floor_sensor_signal() == -1) {
+  if (elev_get_floor_sensor_signal() == -1)
+    {
       elev_set_speed (SPEED_DOWN);
       
       /* Loop until we reach a floor */
@@ -389,9 +382,9 @@ car_init (void)
       last_floor = elev_get_floor_sensor_signal();
     }
 
-    stop_motor();
-    car_last_state = CAR_STOPPED;
-    car_current_state = CAR_IDLE;
+  stop_motor();
+  car_last_state = CAR_STOPPED;
+  car_current_state = CAR_IDLE;
 }
 
 
@@ -399,8 +392,10 @@ car_init (void)
 void
 car_update_state (void)
 {
-    new_event = get_new_event ();
-    if (((new_event >= 0) && (new_event <= N_CAR_EVENTS)) && ((car_current_state >= 0) && (car_current_state <= N_CAR_STATES))) {
-        car_state_table [car_current_state][new_event] ();
+  new_event = get_new_event ();
+
+  if (VALID_STATE(car_current_state) && VALID_EVENT(new_event))
+    {
+      car_state_table [car_current_state][new_event] ();
     }
 }

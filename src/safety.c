@@ -19,12 +19,13 @@ bool stop = false;
 bool
 safety_update_state (void)
 {
-    if (elev_get_stop_signal()) {
+  if (elev_get_stop_signal())
+    {
       stop = true;
       elev_set_stop_lamp(1);
     }
 
-    return stop;
+  return stop;
 }
 
 
@@ -37,7 +38,7 @@ safety_update_state (void)
 bool
 safety_get_state (void)
 {
-    return stop;
+  return stop;
 }
 
 
@@ -49,6 +50,6 @@ safety_get_state (void)
  */
 void
 safety_reset (void) {
-    stop = false;
-    elev_set_stop_lamp(0);
+  stop = false;
+  elev_set_stop_lamp(0);
 }
