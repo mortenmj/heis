@@ -27,8 +27,6 @@ action_dummy (void)
 static void
 action_opened_close (void)
 {
-    DEBUG(("Doors opened: closing\n"));
-
     if (elev_get_obstruction_signal()) {
         door_set_timer();
         return;
@@ -45,7 +43,6 @@ action_opened_close (void)
 static void
 action_closed_open (void)
 {
-    DEBUG(("Doors closed: opening\n"));
     elev_set_door_open_lamp(1);
 
     door_last_state = door_current_state;
@@ -86,7 +83,7 @@ door_closed (void)
 void
 door_set_timer (void)
 {
-    DEBUG(("Reset timer\n"));
+    DEBUG(("Resetting door timer\n"));
     wait_until = time(NULL) + HALT_PAUSE;
 }
 

@@ -40,8 +40,6 @@ halt_elevator (void)
 {
     int floor = elev_get_floor_sensor_signal();
 
-    DEBUG(("Halting\n"));
-
     door_set_timer();
 
     elev_set_floor_indicator(floor);
@@ -93,7 +91,6 @@ action_dummy (void)
 static void
 action_moving_up_halt (void)
 {
-    DEBUG(("action_moving_up_halt\n"));
     int floor = elev_get_floor_sensor_signal();
 
     halt_elevator();
@@ -116,7 +113,6 @@ static void
 action_moving_up_stop (void)
 {
     stop_button_pressed();
-    DEBUG(("action_moving_up_stop\n"));
 
     car_last_state = car_current_state;
     car_current_state = CAR_STOPPED;
@@ -129,7 +125,6 @@ action_moving_down_halt (void)
 {
     int floor = elev_get_floor_sensor_signal();
 
-    DEBUG(("action_moving_down_halt\n"));
     halt_elevator();
 
     ui_remove_order(ORDER_CAR, floor);
@@ -149,7 +144,6 @@ action_moving_down_halt (void)
 static void
 action_moving_down_stop (void)
 {
-    DEBUG(("action_moving_down_stop\n"));
     stop_button_pressed();
 
     car_last_state = car_current_state;
@@ -161,7 +155,6 @@ action_moving_down_stop (void)
 static void
 action_idle_start_up(void)
 {
-    DEBUG(("action_idle_start_up\n"));
     elev_set_speed (SPEED_UP);
 
     car_last_state = car_current_state;
@@ -173,7 +166,6 @@ action_idle_start_up(void)
 static void
 action_idle_start_down (void)
 {
-    DEBUG(("action_idle_start_down\n"));
     elev_set_speed (SPEED_DOWN);
 
     car_last_state = car_current_state;
@@ -187,11 +179,8 @@ action_idle_halt (void)
 {
     int floor = elev_get_floor_sensor_signal();
 
-    DEBUG(("action_idle_halt\n"));
-
     if (ui_check_order(ORDER_CAR, floor)) {
         ui_remove_order(ORDER_CAR, floor);
-        printf("order status %i\n", ui_check_order(ORDER_CAR, floor));
         halt_elevator();
         return;
     }
@@ -210,7 +199,6 @@ action_idle_halt (void)
 static void
 action_idle_stop (void)
 {
-    DEBUG(("action_idle_stop\n"));
     stop_button_pressed();
 
     car_last_state = car_current_state;
@@ -222,7 +210,6 @@ action_idle_stop (void)
 static void
 action_stopped_halt (void)
 {
-    DEBUG(("action_stopped_halt\n"));
     stop_motor();
 
     car_last_state = car_current_state;
@@ -234,7 +221,6 @@ action_stopped_halt (void)
 static void
 action_stopped_start_up (void)
 {
-    DEBUG(("action_stopped_start_up\n"));
     elev_set_speed (SPEED_UP);
 
     car_last_state = car_current_state;
@@ -246,7 +232,6 @@ action_stopped_start_up (void)
 static void
 action_stopped_start_down(void)
 {
-    DEBUG(("action_stopped_start_down\n"));
     elev_set_speed (SPEED_DOWN);
 
     car_last_state = car_current_state;
@@ -258,7 +243,6 @@ action_stopped_start_down(void)
 static void
 action_stopped_stop(void)
 {
-    DEBUG(("action_stopped_start_stop\n"));
     /* If there are car orders, we should reset the stop button */
     if (ui_get_nearest_order(ORDER_CAR, 0) != -1) {
         safety_reset();
@@ -325,7 +309,6 @@ get_new_event (void)
       /* Halt if the elevator has been ordered to the current floor*/
       order = ui_check_order(ORDER_CAR, floor);
       if (order) {
-          DEBUG(("The elevator has been ordered to this floor. Halting.\n"));
           return CAR_HALT;
       }
 
@@ -333,7 +316,6 @@ get_new_event (void)
       /* Halt if someone wants to go the same direction we're going */
       order = ui_check_order((order_type_t)dir, floor);
       if (order) {
-          DEBUG(("Someone wants to go the same way the elevator is moving. Halting.\n"));
           return CAR_HALT;
       }
 
@@ -342,7 +324,6 @@ get_new_event (void)
       /* Halt if someone wants to go the opposite direction we're going */
       order = ui_check_order(opp_dir, floor);
       if (order && (ui_get_nearest_order_in_direction(ORDER_CAR, dir, floor) != -1) && (ui_get_nearest_order_in_direction((order_type_t)dir, dir, floor) != -1)) {
-          DEBUG(("Someone wants to go the opposite way the elevator is moving, and we have no other orders. Halting.\n"));
           return CAR_HALT;
       }
 
@@ -361,7 +342,6 @@ get_new_event (void)
       /* See if someone wants to go up */
       next_floor = ui_get_nearest_order(ORDER_UP, floor);
       if (next_floor != -1) {
-        DEBUG(("Up order found at floor %i, current floor is %i\n", next_floor, floor));
         if (next_floor == floor) { 
             return CAR_HALT;
         } else if (next_floor > floor) {
@@ -374,7 +354,6 @@ get_new_event (void)
       /* See if someone wants to go down */
       next_floor = ui_get_nearest_order(ORDER_DOWN, floor);
       if (next_floor != -1) {
-        DEBUG(("Down order found at floor %i, current floor is %i\n", next_floor, floor));
         if (next_floor == floor) {
             return CAR_HALT;
         } else if  (next_floor > floor) {
